@@ -69,6 +69,7 @@ output_file = 'address_matching_output.csv'
 settings_file = 'address_matching_learned_settings'
 training_file = 'address_matching_training.json'
 canonical_file = 'data/chicago_addresses.csv'
+# canonical_file = 'data/chicago_addresses_head.csv'
 messy_file = 'data/messy_addresses.csv'
 
     
@@ -81,14 +82,14 @@ canonical_addresses = readData(canonical_file)
 if os.path.exists(settings_file):
     print 'reading from', settings_file
     with open(settings_file) as sf :
-        linker = dedupe.StaticGazetteer(sf, num_cores=2)
+        linker = dedupe.StaticGazetteer(sf)
 
 else:
     # Define the fields dedupe will pay attention to
     fields = [{'field' : 'Address', 'type' : 'Address'}]
 
     # Create a new linker object and pass our data model to it.
-    linker = dedupe.Gazetteer(fields, num_cores=2)
+    linker = dedupe.Gazetteer(fields)
     # To train dedupe, we feed it a random sample of records.
     linker.sample(messy_addresses, canonical_addresses, 30000)
 
@@ -135,11 +136,11 @@ with open(output_file, 'w') as f:
                      'Score', 'x_coord', 'y_coord'])
 
     for record_id, record in messy_addresses.items() :
-        row = [record['Address'], '', '', '', '']
+        row = [record['Address'].encode("utf-8"), '', '', '', '']
         if record_id in canonical_lookup :
             canonical_id, score = canonical_lookup[record_id]
-            row[1] = canonical_addresses[canonical_id]['Address']
+            row[1] = canonical_addresses[canonical_id]['Address'].encode("ascii")
             row[2] = score
-            row[3] = canonical_addresses[canonical_id]['LONGITUDE']
-            row[4] = canonical_addresses[canonical_id]['LATITUDE']
+            row[3] = canonical_addresses[canonical_id]['LONGITUDE'].encode("ascii")
+            row[4] = canonical_addresses[canonical_id]['LATITUDE'].encode("ascii")
         writer.writerow(row)
